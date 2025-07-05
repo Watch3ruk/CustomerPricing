@@ -22,12 +22,10 @@ class CustomerCodeContextPlugin
     {
         $code = '';
         if ($this->customerSession->isLoggedIn()) {
-            $data = $this->customerSession->getCustomerData();
-            if ($data) {
-                $attr = $data->getCustomAttribute('accord_customer_code');
-                if ($attr) {
-                    $code = (string)$attr->getValue();
-                }
+
+            $attr = $this->customerSession->getCustomerData()->getCustomAttribute('accord_customer_code');
+            if ($attr) {
+                $code = (string)$attr->getValue();
             }
         }
         $subject->setValue('tr_customer_code', $code, '');
