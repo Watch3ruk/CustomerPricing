@@ -87,8 +87,8 @@ class PriceRepository implements PriceRepositoryInterface
         $collection->addFieldToFilter('accord_customer_code', $customerCode)
                    ->addFieldToFilter('sku', $sku);
 
-        if ($collection->getSize() > 0) {
-            $priceModel = $collection->getFirstItem();
+        $priceModel = $collection->getFirstItem();
+        if ($priceModel && $priceModel->getId()) {
 
             // Save the found price data to cache for next time
             $this->cache->save(
