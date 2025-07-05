@@ -87,8 +87,8 @@ class PriceRepository implements PriceRepositoryInterface
         $collection->addFieldToFilter('accord_customer_code', $customerCode)
                    ->addFieldToFilter('sku', $sku);
 
-        $priceModel = $collection->getFirstItem();
-        if ($priceModel && $priceModel->getId()) {
+        if ($collection->getSize() > 0) {
+            $priceModel = $collection->getFirstItem();
 
             // Save the found price data to cache for next time
             $this->cache->save(
@@ -101,44 +101,6 @@ class PriceRepository implements PriceRepositoryInterface
             return $priceModel;
         }
         return null;
-    }
-
-    public function getPricesByCodeAndSkus($customerCode, array $skus)
-    {
-        $results = [];
-        $skusToQuery = [];
-
-        foreach ($skus as $sku) {
-            $cacheKey = self::CACHE_TAG . '_' . $customerCode . '_' . $sku;
-            $cachedData = $this->cache->load($cacheKey);
-            if ($cachedData) {
-                $data = $this->serializer->unserialize($cachedData);
-                $results[$sku] = $this->priceFactory->create(['data' => $data]);
-            } else {
-                $skusToQuery[] = $sku;
-            }
-        }
-
-        if (!empty($skusToQuery)) {
-            $collection = $this->priceCollectionFactory->create();
-            $collection->addFieldToFilter('accord_customer_code', $customerCode)
-                       ->addFieldToFilter('sku', ['in' => $skusToQuery]);
-
-            foreach ($collection as $priceModel) {
-                $sku = $priceModel->getSku();
-                $results[$sku] = $priceModel;
-
-                $cacheKey = self::CACHE_TAG . '_' . $customerCode . '_' . $sku;
-                $this->cache->save(
-                    $this->serializer->serialize($priceModel->getData()),
-                    $cacheKey,
-                    [self::CACHE_TAG],
-                    self::CACHE_LIFETIME
-                );
-            }
-        }
-
-        return $results;
     }
 
     public function delete(PriceInterface $price)

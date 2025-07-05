@@ -1,0 +1,3 @@
+interface ProductInterface {
+    custom_price: ProductPrice @resolver(class: "TR\\CustomerPricing\\Model\\Resolver\\Product\\CustomPrice") @doc(description: "The final price for the customer including custom pricing.")
+}

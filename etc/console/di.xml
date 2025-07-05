@@ -4,7 +4,6 @@
         <arguments>
             <argument name="commands" xsi:type="array">
                 <item name="tr_prices_process_chunk" xsi:type="object">TR\CustomerPricing\Console\Command\ProcessChunk</item>
-                <item name="tr_prices_sync" xsi:type="object">TR\CustomerPricing\Console\Command\ImportPrices</item>
             </argument>
         </arguments>
     </type>
