@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Customer:etc/customer_attributes.xsd">
+    <customer_attributes>
+        <attribute name="accord_customer_code" />
+        <attribute name="last_price_sync_at" />
+    </customer_attributes>
+</config>

@@ -1,0 +1,74 @@
+<?php
+namespace TR\CustomerPricing\Observer;
+
+use Magento\Framework\Event\ObserverInterface;
+use Magento\Framework\Event\Observer;
+use Psr\Log\LoggerInterface;
+use Magento\Customer\Api\CustomerRepositoryInterface;
+use Magento\Framework\MessageQueue\PublisherInterface;
+use Magento\Framework\Stdlib\DateTime\DateTime as MagentoDate;
+
+class SyncPriceOnLogin implements ObserverInterface
+{
+    const TOPIC_NAME = 'tr.customer.price.sync';
+
+    private LoggerInterface $logger;
+    private CustomerRepositoryInterface $customerRepository;
+    private PublisherInterface $publisher;
+    private MagentoDate $date;
+
+    public function __construct(
+        LoggerInterface $logger,
+        CustomerRepositoryInterface $customerRepository,
+        PublisherInterface $publisher,
+        MagentoDate $date
+    ) {
+        $this->logger             = $logger;
+        $this->customerRepository = $customerRepository;
+        $this->publisher          = $publisher;
+        $this->date               = $date;
+    }
+
+    public function execute(Observer $observer): void
+    {
+        $this->logger->info('--- SyncPriceOnLogin Observer TRIGGERED ---');
+
+        try {
+            $customer   = $observer->getEvent()->getCustomer();
+            $lastSync   = $customer->getCustomAttribute('last_price_sync_at');
+            
+            if ($lastSync && $lastSync->getValue()) {
+                $this->logger->info(
+                    "Sync skipped for customer {$customer->getId()}: already synced today."
+                );
+                return;
+            }
+
+            $this->logger->info(
+                "Attempting to create sync job for customer ID {$customer->getId()}"
+            );
+
+            // Use Magento's UTC date
+            $nowUtc = $this->date->gmtDate('Y-m-d H:i:s');
+
+            // Update via repository
+            $customerToUpdate = $this->customerRepository->getById($customer->getId());
+            $customerToUpdate->setCustomAttribute('last_price_sync_at', $nowUtc);
+            $this->customerRepository->save($customerToUpdate);
+
+            // Mirror back onto the session customer
+            $customer->setCustomAttribute('last_price_sync_at', $nowUtc);
+
+            // Publish your sync job
+            $this->publisher->publish(self::TOPIC_NAME, $customer->getId());
+            $this->logger->info(
+                "Publisher: Job created for customer ID {$customer->getId()}"
+            );
+
+        } catch (\Exception $e) {
+            $this->logger->error(
+                "Publisher: Failed to create job. ERROR: " . $e->getMessage()
+            );
+        }
+    }
+}

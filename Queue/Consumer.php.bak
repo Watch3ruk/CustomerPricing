@@ -1,0 +1,78 @@
+<?php
+namespace TR\CustomerPricing\Queue;
+
+use Psr\Log\LoggerInterface;
+use Magento\Customer\Api\CustomerRepositoryInterface;
+use Adlab\Accord\ApiConnector\ProductsIntialiser as ApiConnector;
+use Magento\Framework\App\ResourceConnection;
+use Magento\Framework\Exception\NoSuchEntityException;
+
+class Consumer
+{
+    protected $logger;
+    protected $customerRepository;
+    protected $apiConnector;
+    protected $resourceConnection;
+
+    public function __construct(
+        LoggerInterface $logger,
+        CustomerRepositoryInterface $customerRepository,
+        ApiConnector $apiConnector,
+        ResourceConnection $resourceConnection
+    ) {
+        $this->logger = $logger;
+        $this->customerRepository = $customerRepository;
+        $this->apiConnector = $apiConnector;
+        $this->resourceConnection = $resourceConnection;
+    }
+
+    /**
+     * Process the message from the queue.
+     *
+     * @param string $customerId
+     * @return void
+     */
+    public function process($customerId)
+    {
+        $this->logger->info("Consumer: Received job for customer ID {$customerId}");
+        try {
+            $customer = $this->customerRepository->getById($customerId);
+            $customerCodeAttr = $customer->getCustomAttribute('accord_customer_code');
+
+            if (!$customerCodeAttr || !$customerCodeAttr->getValue()) {
+                $this->logger->info("Consumer: Customer {$customerId} has no accord_customer_code. Skipping sync.");
+                return;
+            }
+            $customerCode = $customerCodeAttr->getValue();
+
+            $availableSkus = $this->apiConnector->getProductSkus($this->apiConnector->restrictedProducts($customerCode));
+            if (empty($availableSkus)) {
+                $this->logger->info("Consumer: No products to sync for customer code: {$customerCode}.");
+                return;
+            }
+
+            $pricesFromApi = $this->apiConnector->initialiseProductPrices($customerCode, $availableSkus);
+            if (empty($pricesFromApi)) {
+                $this->logger->warning("Consumer: Did not receive prices from API for customer code: {$customerCode}.");
+                return;
+            }
+
+            $dataToInsert = [];
+            foreach ($pricesFromApi as $sku => $price) {
+                $dataToInsert[] = ['accord_customer_code' => $customerCode, 'sku' => $sku, 'price' => $price];
+            }
+
+            if (!empty($dataToInsert)) {
+                $connection = $this->resourceConnection->getConnection();
+                $tableName = $this->resourceConnection->getTableName('tr_customer_pricing');
+                $connection->insertOnDuplicate($tableName, $dataToInsert, ['price']);
+                $this->logger->info("Consumer: Synced " . count($dataToInsert) . " prices for customer {$customerCode}.");
+            }
+
+        } catch (NoSuchEntityException $e) {
+            $this->logger->error("Consumer: Customer ID {$customerId} not found.");
+        } catch (\Exception $e) {
+            $this->logger->error("Consumer: Sync failed for customer {$customerId}: " . $e->getMessage());
+        }
+    }
+}

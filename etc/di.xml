@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="TR\CustomerPricing\Api\PriceRepositoryInterface" type="TR\CustomerPricing\Model\PriceRepository"/>
+    <preference for="TR\CustomerPricing\Api\Data\PriceInterface" type="TR\CustomerPricing\Model\Price"/>
+
+    <type name="TR\CustomerPricing\Queue\Consumer">
+        <arguments>
+            <argument name="logger" xsi:type="object">Psr\Log\LoggerInterface</argument>
+            <argument name="customerRepository" xsi:type="object">Magento\Customer\Api\CustomerRepositoryInterface</argument>
+            <argument name="apiConnector" xsi:type="object">Adlab\Accord\ApiConnector\ProductsIntialiser</argument>
+            <argument name="resourceConnection" xsi:type="object">Magento\Framework\App\ResourceConnection</argument>
+        </arguments>
+    </type>
+    <type name="Magento\Quote\Model\Quote\Item">
+        <plugin name="tr_customerpricing_quote_item_price"
+                type="TR\CustomerPricing\Plugin\Quote\Item\CalculationPricePlugin"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\Catalog\Pricing\Price\FinalPrice">
+    <plugin name="tr_customerpricing_final_price_plugin" type="TR\CustomerPricing\Plugin\Pricing\FinalPricePlugin" sortOrder="10"/>
+</type>
+<type name="Magento\Catalog\Pricing\Price\RegularPrice">
+    <plugin name="tr_customerpricing_hide_regularprice"
+            type="TR\CustomerPricing\Plugin\Pricing\HideRegularPricePlugin"
+            sortOrder="50"/>
+</type>
+   <!-- Custom Logger Definition -->
+    <virtualType name="TR\CustomerPricing\Logger\Handler" type="Magento\Framework\Logger\Handler\Base">
+        <arguments>
+            <argument name="fileName" xsi:type="string">/var/log/tr_customer_pricing_consumer.log</argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="TR\CustomerPricing\Logger\CustomLogger" type="Magento\Framework\Logger\Monolog">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="system" xsi:type="object">TR\CustomerPricing\Logger\Handler</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <!-- Update Consumer to use the custom logger and define all arguments -->
+    <type name="TR\CustomerPricing\Queue\Consumer">
+        <arguments>
+            <argument name="logger" xsi:type="object">TR\CustomerPricing\Logger\CustomLogger</argument>
+            <argument name="customerRepository" xsi:type="object">Magento\Customer\Api\CustomerRepositoryInterface</argument>
+            <argument name="apiConnector" xsi:type="object">Adlab\Accord\ApiConnector\ProductsIntialiser</argument>
+            <argument name="resourceConnection" xsi:type="object">Magento\Framework\App\ResourceConnection</argument>
+            <argument name="date" xsi:type="object">Magento\Framework\Stdlib\DateTime\DateTime</argument>
+        </arguments>
+    </type>
+    <type name="TR\CustomerPricing\Observer\SyncPriceOnLogin">
+    <arguments>
+        <argument name="logger" xsi:type="object">TR\CustomerPricing\Logger\CustomLogger</argument>
+        <argument name="customerRepository" xsi:type="object">Magento\Customer\Api\CustomerRepositoryInterface</argument>
+        <argument name="publisher" xsi:type="object">Magento\Framework\MessageQueue\PublisherInterface</argument>
+        <argument name="resourceConnection" xsi:type="object">Magento\Framework\App\ResourceConnection</argument>
+        <argument name="eavConfig" xsi:type="object">Magento\Eav\Model\Config</argument>
+    </arguments>
+</type>
+
+</config>

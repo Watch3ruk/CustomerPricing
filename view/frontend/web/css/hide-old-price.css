@@ -1,0 +1,6 @@
+/* hide any crossed-out price */
+.price-box .price-old,
+.price .old-price,
+del.price-old {
+  display: none !important;
+}

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="checkout_cart_product_add_after">
+        <observer name="tr_customerpricing_set_custom_price"
+                  instance="TR\CustomerPricing\Observer\SetCustomPriceObserver"/>
+    </event>
+    <event name="customer_login">
+    <observer name="tr_customerpricing_refresh_cart"
+              instance="TR\CustomerPricing\Observer\RefreshCartPricesObserver"/>
+</event>
+</config>

@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework-message-queue:etc/topology.xsd">
+
+    <!-- 1) Declare the exchange/topic -->
+    <exchange name="tr.customer.price.sync" type="topic" connection="db">
+        <!-- 2) Bind exchange → queue (destination creates a queue named the same as the topic) -->
+        <binding id="tr.customer.price.sync"
+                 topic="tr.customer.price.sync"
+                 destination="tr.customer.price.sync"/>
+    </exchange>
+</config>

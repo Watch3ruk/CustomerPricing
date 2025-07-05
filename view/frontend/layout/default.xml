@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+  <body>
+    <!-- catch both the category list AND the widget list -->
+    <referenceBlock name="category.products.list">
+      <arguments>
+        <argument name="cacheable" xsi:type="boolean">false</argument>
+      </arguments>
+    </referenceBlock>
+    <referenceBlock name="product_list_widget">
+      <arguments>
+        <argument name="cacheable" xsi:type="boolean">false</argument>
+      </arguments>
+    </referenceBlock>
+  </body>
+</page>
