@@ -42,8 +42,8 @@ class Get implements HttpGetActionInterface
             if ($customerCodeAttr && $customerCodeAttr->getValue()) {
                 $customerCode = $customerCodeAttr->getValue();
                 
-                foreach ($skus as $sku) {
-                    $customPrice = $this->priceRepository->getPriceByCodeAndSku($customerCode, $sku);
+                $prices = $this->priceRepository->getPricesByCodeAndSkus($customerCode, $skus);
+                foreach ($prices as $sku => $customPrice) {
                     if ($customPrice && $customPrice->getId()) {
                         $price = (float)$customPrice->getPrice();
                         $priceData[$sku] = [
