@@ -22,6 +22,7 @@ class CustomerCodeContextPlugin
     {
         $code = '';
         if ($this->customerSession->isLoggedIn()) {
+
             $attr = $this->customerSession->getCustomerData()->getCustomAttribute('accord_customer_code');
             if ($attr) {
                 $code = (string)$attr->getValue();

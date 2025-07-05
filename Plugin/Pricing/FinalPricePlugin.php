@@ -40,6 +40,11 @@ class FinalPricePlugin
 
         try {
             $customerData = $this->customerSession->getCustomerData();
+            if (!$customerData) {
+                $this->logger->info("[SKU: {$sku}] Exiting: No customer data available in session.");
+                return $result;
+            }
+
             $customerCodeAttr = $customerData->getCustomAttribute('accord_customer_code');
 
             if (!$customerCodeAttr || !$customerCodeAttr->getValue()) {
