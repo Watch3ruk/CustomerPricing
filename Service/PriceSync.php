@@ -3,6 +3,7 @@ namespace TR\CustomerPricing\Service;
 
 use Adlab\Accord\ApiConnector\ProductsIntialiser;
 use TR\CustomerPricing\Api\PriceRepositoryInterface;
+use TR\CustomerPricing\Api\Data\PriceInterfaceFactory;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
@@ -10,17 +11,20 @@ class PriceSync
 {
     private $apiInitialiser;
     private $priceRepo;
+    private $priceFactory;
     private $customerRepo;
     private $logger;
 
     public function __construct(
         ProductsIntialiser $apiInitialiser,
         PriceRepositoryInterface $priceRepo,
+        PriceInterfaceFactory $priceFactory,
         CustomerRepositoryInterface $customerRepo,
         LoggerInterface $logger
     ) {
         $this->apiInitialiser = $apiInitialiser;
         $this->priceRepo = $priceRepo;
+        $this->priceFactory = $priceFactory;
         $this->customerRepo = $customerRepo;
         $this->logger = $logger;
     }
@@ -32,15 +36,13 @@ class PriceSync
         $prices = $this->apiInitialiser->initialiseProductPrices($customerCode, $skus);
 
         foreach ($prices as $sku => $price) {
-            try {
-                $model = $this->priceRepo->getByCodeAndSku($customerCode, $sku);
-                $model->setPrice($price);
-            } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
-                $model = $this->priceRepo->getEmpty();
-                $model->setCustomerCode($customerCode);
+            $model = $this->priceRepo->getPriceByCodeAndSku($customerCode, $sku);
+            if (!$model) {
+                $model = $this->priceFactory->create();
+                $model->setAccordCustomerCode($customerCode);
                 $model->setSku($sku);
-                $model->setPrice($price);
             }
+            $model->setPrice($price);
 
             try {
                 $this->priceRepo->save($model);
