@@ -4,27 +4,27 @@ namespace TR\CustomerPricing\Cron;
 use Psr\Log\LoggerInterface;
 use Magento\Customer\Api\CustomerRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
-use Magento\Framework\App\Filesystem\DirectoryList;
+use Magento\Framework\MessageQueue\PublisherInterface;
 
 class SyncPrices
 {
-    const PARALLEL_PROCESSES = 50; // Number of processes to run at once
+    const TOPIC_NAME = 'tr.customer.price.sync';
 
     protected $logger;
     protected $customerRepository;
     protected $searchCriteriaBuilder;
-    protected $directoryList;
+    protected $publisher;
 
     public function __construct(
         LoggerInterface $logger,
         CustomerRepositoryInterface $customerRepository,
         SearchCriteriaBuilder $searchCriteriaBuilder,
-        DirectoryList $directoryList
+        PublisherInterface $publisher
     ) {
         $this->logger = $logger;
         $this->customerRepository = $customerRepository;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
-        $this->directoryList = $directoryList;
+        $this->publisher = $publisher;
     }
 
     public function execute()
@@ -45,22 +45,11 @@ class SyncPrices
             return;
         }
 
-        // 2. Split the IDs into chunks for parallel processing
-        $chunks = array_chunk($allCustomerIds, ceil(count($allCustomerIds) / self::PARALLEL_PROCESSES));
-        
-        $magentoPath = $this->directoryList->getRoot();
-        $phpPath = 'php'; // Or specify full path to PHP binary, e.g., /usr/bin/php
-
-        // 3. Dispatch a background process for each chunk
-        foreach ($chunks as $chunk) {
-            $customerIdString = implode(',', $chunk);
-            $command = "{$phpPath} {$magentoPath}/bin/magento tr:prices:process-chunk {$customerIdString}";
-            
-            // Execute the command in the background
-            $this->logger->info("Dispatcher: Starting worker for " . count($chunk) . " customers.");
-            shell_exec($command . ' > /dev/null 2>&1 &');
+        foreach ($allCustomerIds as $customerId) {
+            $this->publisher->publish(self::TOPIC_NAME, $customerId);
+            $this->logger->info("Dispatcher: Job created for customer ID {$customerId}");
         }
 
-        $this->logger->info('Price Sync Dispatcher: All workers have been started.');
+        $this->logger->info('Price Sync Dispatcher: Dispatched jobs for all customers.');
     }
 }
