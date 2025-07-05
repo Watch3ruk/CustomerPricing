@@ -19,11 +19,6 @@
     <type name="Magento\Catalog\Pricing\Price\FinalPrice">
     <plugin name="tr_customerpricing_final_price_plugin" type="TR\CustomerPricing\Plugin\Pricing\FinalPricePlugin" sortOrder="10"/>
 </type>
-    <type name="Magento\Framework\App\Http\Context">
-        <plugin name="tr_customerpricing_http_context"
-                type="TR\CustomerPricing\Plugin\Http\CustomerCodeContextPlugin"
-                sortOrder="10"/>
-    </type>
 <type name="Magento\Catalog\Pricing\Price\RegularPrice">
     <plugin name="tr_customerpricing_hide_regularprice"
             type="TR\CustomerPricing\Plugin\Pricing\HideRegularPricePlugin"

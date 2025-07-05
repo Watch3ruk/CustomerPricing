@@ -1,10 +1,18 @@
 <?xml version="1.0"?>
-<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd" cacheable="false">
-    <body>
-       <referenceBlock name="product.price.render.default">
-            <arguments>
-                <argument name="cacheable" xsi:type="boolean">false</argument>
-            </arguments>
-        </referenceBlock>
-    </body>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+  <body>
+    <referenceBlock name="category.products.list">
+      <!-- Remove the default price box if needed -->
+      <block class="TR\CustomerPricing\Block\Product\Price"
+             name="customer.pricing.list.price"
+             template="TR_CustomerPricing::product/price-list.phtml"
+             cacheable="false"
+             before="product.price.final">
+        <arguments>
+          <argument name="price_render_handle" xsi:type="string">final_price</argument>
+        </arguments>
+      </block>
+    </referenceBlock>
+  </body>
 </page>

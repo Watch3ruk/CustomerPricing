@@ -3,8 +3,6 @@ namespace TR\CustomerPricing\Plugin\Pricing;
 
 use Magento\Catalog\Pricing\Price\FinalPrice;
 use Magento\Customer\Model\Session as CustomerSession;
-use Magento\Framework\App\Http\Context as HttpContext;
-use Magento\Customer\Model\Context as CustomerContext;
 use TR\CustomerPricing\Api\PriceRepositoryInterface;
 use Psr\Log\LoggerInterface;
 
@@ -13,18 +11,15 @@ class FinalPricePlugin
     private $customerSession;
     private $priceRepository;
     private $logger;
-    private $httpContext;
 
     public function __construct(
         CustomerSession $customerSession,
         PriceRepositoryInterface $priceRepository,
-        LoggerInterface $logger,
-        HttpContext $httpContext
+        LoggerInterface $logger
     ) {
         $this->customerSession = $customerSession;
         $this->priceRepository = $priceRepository;
         $this->logger = $logger;
-        $this->httpContext = $httpContext;
     }
 
     public function afterGetValue(FinalPrice $subject, $result)
@@ -32,7 +27,7 @@ class FinalPricePlugin
         $sku = $subject->getProduct()->getSku();
         $this->logger->info("--- [SKU: {$sku}] Debugging FinalPricePlugin ---");
 
-        if (!$this->httpContext->getValue(CustomerContext::CONTEXT_AUTH)) {
+        if (!$this->customerSession->isLoggedIn()) {
             $this->logger->info("[SKU: {$sku}] Exiting: Customer not logged in.");
             return $result;
         }
@@ -40,11 +35,6 @@ class FinalPricePlugin
 
         try {
             $customerData = $this->customerSession->getCustomerData();
-            if (!$customerData) {
-                $this->logger->info("[SKU: {$sku}] Exiting: No customer data available in session.");
-                return $result;
-            }
-
             $customerCodeAttr = $customerData->getCustomAttribute('accord_customer_code');
 
             if (!$customerCodeAttr || !$customerCodeAttr->getValue()) {

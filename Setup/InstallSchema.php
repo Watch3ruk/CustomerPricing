@@ -12,7 +12,7 @@ class InstallSchema implements InstallSchemaInterface
         $installer = $setup;
         $installer->startSetup();
         $table = $installer->getConnection()->newTable(
-            $installer->getTable('tr_customer_pricing')
+            $installer->getTable('accord_customer_price')
         )
         ->addColumn('entity_id', \Magento\Framework\Db\Ddl\Table::TYPE_INTEGER, null, [
             'identity' => true, 'nullable' => false, 'primary' => true
@@ -23,7 +23,7 @@ class InstallSchema implements InstallSchemaInterface
         ->addColumn('created_at', \Magento\Framework\Db\Ddl\Table::TYPE_TIMESTAMP, null, ['nullable' => false, 'default' => \Magento\Framework\Db\Ddl\Table::TIMESTAMP_INIT], 'Created At')
         ->addColumn('updated_at', \Magento\Framework\Db\Ddl\Table::TYPE_TIMESTAMP, null, ['nullable' => false, 'default' => \Magento\Framework\Db\Ddl\Table::TIMESTAMP_INIT_UPDATE], 'Updated At')
         ->addIndex(
-            $installer->getIdxName('tr_customer_pricing', ['customer_code', 'sku'], \Magento\Framework\Db\Adapter\AdapterInterface::INDEX_TYPE_UNIQUE),
+            $installer->getIdxName('accord_customer_price', ['customer_code', 'sku'], \Magento\Framework\Db\Adapter\AdapterInterface::INDEX_TYPE_UNIQUE),
             ['customer_code', 'sku'], ['type' => \Magento\Framework\Db\Adapter\AdapterInterface::INDEX_TYPE_UNIQUE]
         );
         $installer->getConnection()->createTable($table);

@@ -1,10 +1,12 @@
 <?xml version="1.0"?>
-<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd" cacheable="false">
-    <body>
-        <referenceBlock name="product.price.final">
-            <arguments>
-                <argument name="cacheable" xsi:type="boolean">false</argument>
-            </arguments>
-        </referenceBlock>
-    </body>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+  <body>
+    <referenceContainer name="product.info.price">
+      <block class="TR\CustomerPricing\Block\Product\Price"
+             name="customer.pricing.price"
+             template="TR_CustomerPricing::product/price.phtml"
+             cacheable="false"/>
+    </referenceContainer>
+  </body>
 </page>
